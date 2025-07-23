@@ -1,27 +1,28 @@
-import { Cliente } from "./Cliente.js";
+import { Cliente } from "../Cliente.js";
 
-export class ContaCorrente {
-    constructor(agencia, cliente) {
+// Classe abstrata
+export class Conta {
+    constructor(saldo, agencia, cliente, taxa) {
+        if (this.constructor == Conta) {
+            throw new Error("Não instancie um objeto do tipo CONTA!");
+        } else if(taxa === undefined) {
+            throw new Error("O atributo TAXA é obrigatório!");
+        }
+
+        this.#saldo = saldo;
         this.#agencia = agencia;
         this.#cliente = cliente;
-
-        ContaCorrente.numeroDeContas += 1;
+        this.#taxa = taxa;
     }
 
-    // Convenção da comunidade para representar atributos privados: _nomeAtributo
-    static numeroDeContas = 0;
+    #saldo;
     #agencia;
     #cliente;
-    #saldo = 0;
+    #taxa;
 
     get saldo() {
         return this.#saldo;
     }
-
-    // Não quero que o saldo seja modificado de forma direta, somente com uso dos métodos
-    // setSaldo(saldo) {
-    //     this.#saldo = saldo;
-    // }
 
     get cliente() {
         return this.#cliente;
@@ -30,6 +31,8 @@ export class ContaCorrente {
     set cliente(cliente) {
         if (cliente instanceof Cliente) {
             this.#cliente = cliente;
+        } else {
+            console.log("O atributo CLIENTE recebe somente instâncias do tipo Cliente!");
         }
     }
 
@@ -40,13 +43,27 @@ export class ContaCorrente {
     set agencia(agencia) {
         if (typeof agencia == "number") {
             this.#agencia = agencia;
+        } else {
+            console.log("O atributo AGENCIA recebe somente valores numéricos!");
         }
     }
 
-    sacar(valorSacado) {
+    get taxa() {
+        return this.#taxa;
+    }
+
+    sacar(valorSacado, taxa) {
+        if (taxa === undefined) {
+            throw new Error("O valor da taxa dever ser informado!");
+        } else {
+            return this.#sacar(valorSacado, taxa);
+        }
+    }
+
+    #sacar(valorSacado, taxa) {
+        valorSacado *= taxa;
         if (this.#saldo >= valorSacado) {
             this.#saldo -= valorSacado;
-            console.log(`Valor de R$ ${valorSacado} sacado com sucesso!`);
             return valorSacado;
         } else {
             console.log("A conta não possui saldo suficiente para realizar essa operação!");
@@ -55,22 +72,16 @@ export class ContaCorrente {
     }
 
     depositar(valorDepositado) {
-        // if (valorDepositado > 0) {
-        //     this.#saldo += valorDepositado;
-        // }
-
-        // Técnica de early return para melhorar a legibilidade do código
         if (valorDepositado <= 0) {
             console.log("Valor inválido para realizar um depósito!");
             return;
         }
 
         this.#saldo += valorDepositado;
-        console.log("Depósito realizado com sucesso!");
     }
 
     transferir(valorTransferido, conta) {
-        const valorSacado = this.sacar(valorTransferido);
+        const valorSacado = this.sacar(valorTransferido, this.taxa);
         conta.depositar(valorSacado);
     }
 }
